@@ -13,7 +13,8 @@ from keyboards.keyboard_utils import create_inline_kb
 from database.requests import get_or_create_user, get_wishlists, get_friends_wishlists, get_wishlist, \
     delete_wishlist_db, get_subscription, delete_subscription, get_or_create_subscription, update_subscription_status, \
     get_subscription_with_details, get_user_language, get_item
-from main import logger
+import logging
+logger = logging.getLogger(__name__)
 
 # Initialize router for handling messages and callbacks
 router = Router()
@@ -134,19 +135,18 @@ async def subscribe_to_wishlist(callback: CallbackQuery, i18n: dict, state: FSMC
         )
         await callback.answer(i18n.get('subscribed_success'), show_alert=True)
 
-    from aiogram.types import CallbackQuery
-
-    class FakeCallback:
-        def __init__(self, message, from_user, access_uuid):
-            self.message = message
-            self.from_user = from_user
-            self.data = f"view_wishlist_{access_uuid}"
-
-        async def answer(self):
-            pass
-
-    fake_callback = FakeCallback(callback.message, callback.from_user, wishlist.access_uuid)
-    await view_wishlist(fake_callback, i18n, state)
+    # Create a simple object to pass as callback
+    from types import SimpleNamespace
+    fake_cb = SimpleNamespace()
+    fake_cb.message = callback.message
+    fake_cb.from_user = callback.from_user
+    fake_cb.data = f"view_wishlist_{wishlist.access_uuid}"
+    
+    async def fake_answer():
+        pass
+    fake_cb.answer = fake_answer
+    
+    await view_wishlist(fake_cb, i18n, state)
 
 
 @router.callback_query(F.data.startswith('unsubscribe_'))
@@ -173,19 +173,18 @@ async def unsubscribe_from_wishlist(callback: CallbackQuery, i18n: dict, state: 
 
     await callback.answer(i18n.get('unsubscribed_success'), show_alert=True)
 
-    from aiogram.types import CallbackQuery
-
-    class FakeCallback:
-        def __init__(self, message, from_user, access_uuid):
-            self.message = message
-            self.from_user = from_user
-            self.data = f"view_wishlist_{access_uuid}"
-
-        async def answer(self):
-            pass
-
-    fake_callback = FakeCallback(callback.message, callback.from_user, wishlist.access_uuid)
-    await view_wishlist(fake_callback, i18n, state)
+    # Create a simple object to pass as callback
+    from types import SimpleNamespace
+    fake_cb = SimpleNamespace()
+    fake_cb.message = callback.message
+    fake_cb.from_user = callback.from_user
+    fake_cb.data = f"view_wishlist_{wishlist.access_uuid}"
+    
+    async def fake_answer():
+        pass
+    fake_cb.answer = fake_answer
+    
+    await view_wishlist(fake_cb, i18n, state)
 
 
 async def notify_owner_about_request(bot: Bot, wishlist: Wishlist, subscriber: User, i18n: dict):
